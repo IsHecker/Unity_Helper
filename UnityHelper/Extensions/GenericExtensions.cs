@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace UnityHelper.Extensions
 {
@@ -12,15 +9,17 @@ namespace UnityHelper.Extensions
     /// </summary>
     public static class GenericExtensions
     {
-        public static void Log(this object source) => Console.WriteLine(source);
+        public static void Log(this object source) => UnityEngine.Debug.Log(source);
         public static void Log(this IEnumerable source)
         {
-            Console.Write("{ ");
+            //Console.Write("{ ");
 
-            foreach (var value in source)
-                Console.Write($"{value} ");
+            //foreach (var value in source)
+            //    Console.Write($"{value} ");
 
-            Console.Write("} \n");
+            //Console.Write("} \n");
+
+            UnityEngine.Debug.Log("{ " + string.Join(", ", source) + " }");
         }
         public static void Loop<T>(this IEnumerable<T> source, Action<T> action)
         {

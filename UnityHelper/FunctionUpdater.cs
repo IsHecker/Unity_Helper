@@ -1,119 +1,77 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
-using UnityEditor;
 using UnityEngine;
 
 namespace UnityHelper
 {
     public class FunctionUpdater
     {
-        private static readonly Dictionary<int, UpdateProcess> updateFunctions = new();
-        
+        private static readonly Dictionary<string, FunctionActiveState> updateFunctions = new();
+
         /// <summary>
         /// Updates <paramref name="function"/> Repeatidly Every Frame While <paramref name="stopCondition"/> is true. 
         /// </summary>
         /// <param name="function"> The Method to be updated.</param>
         /// <param name="stopCondition"> The Condition to keep updating. </param>
-        public static void Update(int functionId, Action function, Func<bool> stopCondition)
+        public static void Update(string actionName, Action function, Func<bool> stopCondition)
         {
-            updateFunctions.TryAdd(functionId, new UpdateProcess(function, stopCondition));
+            if (!updateFunctions.TryAdd(actionName, null)) 
+            {
+                Stop(actionName);
+            }
+
+            CreateUpdate(actionName, function, stopCondition);
         }
 
-        public static void Stop(int functionId)
+        public static void Stop(string actionName)
         {
-            if (!updateFunctions.TryGetValue(functionId, out UpdateProcess process))
+            if (!updateFunctions.TryGetValue(actionName, out var func))
                 return;
-            process.Stop();
-            updateFunctions.Remove(functionId);
+            func.Value = false;
         }
 
         public static void StopAll()
         {
-            foreach (var (functionId, process) in updateFunctions)
+            foreach (var (key, state) in updateFunctions)
             {
-                if (!updateFunctions.ContainsKey(functionId))
-                    continue;
-                process.Stop();
-                    updateFunctions.Remove(functionId);
+                state.Value = false;
+                updateFunctions.Remove(key);
             }
         }
 
-        private class UpdateProcess
+        private static async void CreateUpdate(string actionName, Action function, Func<bool> stopCondition)
         {
-            private bool stop = false;
+            FunctionActiveState activeState = new FunctionActiveState { Value = true };
 
-            public UpdateProcess(Action function, Func<bool> stopCondition)
+            updateFunctions[actionName] = activeState;
+
+
+            while (!stopCondition() && activeState.Value)
             {
-                Update();
-                async void Update()
-                {
-                    while (!stopCondition() && IsRunning())
-                    {
-                        function?.Invoke();
-                        await Task.Yield();
-                    }
-                }
+                Debug.Log("Running...");
+                function?.Invoke();
+                await Task.Yield();
             }
-            private bool IsRunning() => !stop;
-            public void Stop() => stop = true;
-        }
-    }
 
-
-    public static class GameLifecycleHandler
-    {
-        public delegate void GameStoppedEventHandler();
-        public static event GameStoppedEventHandler GameStopped = FunctionUpdater.StopAll;
-
-        private static bool isGameRunning = true;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Initialize()
-        {
-#if UNITY_EDITOR
-        EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
-#else
-            Application.wantsToQuit += WantsToQuit;
-#endif
+            updateFunctions.Remove(actionName);
         }
 
-#if UNITY_EDITOR
-    private static void OnPlayModeStateChanged(PlayModeStateChange state)
-    {
-        if (state == PlayModeStateChange.ExitingPlayMode)
-        {
-            Debug.Log("OnPlayModeStateChanged!!!");
-            isGameRunning = false;
-            OnGameStopped();
-        }
-    }
-#else
-        private static bool WantsToQuit()
-        {
-            isGameRunning = false;
-            OnGameStopped();
-            return true; // Return true to allow application to quit
-        }
-#endif
 
-        public static void StopGame()
+        private unsafe class BoolPtr
         {
-            isGameRunning = false;
-            OnGameStopped();
+            private readonly bool* ptr;
+            public BoolPtr(bool* value)
+            {
+                ptr = value;
+            }
+            public void SetPtr(bool value) => *ptr = value;
+            public bool GetPtr() => *ptr;
         }
 
-        private static void OnGameStopped()
+        private class FunctionActiveState
         {
-            GameStopped?.Invoke();
-        }
-
-        public static bool IsGameRunning()
-        {
-            return isGameRunning;
+            public bool Value { get; set; }
         }
     }
 }

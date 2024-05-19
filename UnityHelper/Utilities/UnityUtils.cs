@@ -14,12 +14,10 @@ namespace UnityHelper.Utilities
     {
         // Members
         private static Camera _camera;
-        private readonly static Dictionary<float, WaitForSeconds> waitDictionary = new Dictionary<float, WaitForSeconds>();
         private static readonly UniqueRandomNumber randomNumber = new UniqueRandomNumber();
 
         // Functions
         public static Camera Camera { get { if (!_camera) { _camera = Camera.main; } return _camera; } }
-        public static WaitForSeconds WaitFor(float seconds) => waitDictionary.TryGetValue(seconds, out var wait) ? wait : waitDictionary[seconds] = new WaitForSeconds(seconds);
         public static bool IsOverUI(Touch touch)
         {
             if (touch.phase != TouchPhase.Began)

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity_Helper.UnityHelper.Utilities;
 using UnityEngine;
 using UnityHelper.Utilities;
 
@@ -61,10 +62,10 @@ namespace UnityHelper
 
             var animatorState = _animator.GetCurrentAnimatorStateInfo(0);
 
-            yield return UnityUtils.WaitFor(animatorState.length * animatorState.normalizedTime);
+            yield return CoroutineUtils.WaitFor(animatorState.length * animatorState.normalizedTime);
             poppedScreen.SetActive(false);
 
-            yield return UnityUtils.WaitFor(10);
+            yield return CoroutineUtils.WaitFor(10);
             if (_panelStack.Count > 0)
                 _panelStack.Peek().SetActive(true);
         }
