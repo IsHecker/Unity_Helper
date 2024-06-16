@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-namespace UnityHelper
+namespace UnityHelper.Events
 {
     public class EventManager
     {

@@ -5,15 +5,13 @@ namespace UnityHelper
 {
     public class StopWatch
     {
-        public float time;
-        private bool stop;
+        public float CurrentTime { get; private set; }
+        public bool IsRunning { get; private set; }
 
-        private StopWatch(bool stop)
+        private StopWatch(bool start)
         {
-            time = 0.0f;
-            this.stop = stop;
-
-            Start();
+            CurrentTime = 0.0f;
+            IsRunning = start;
         }
 
 
@@ -21,26 +19,37 @@ namespace UnityHelper
         /// Starts a new StopWatch.
         /// </summary>
         /// <returns></returns>
-        public static StopWatch StartStopWatch()
+        public static StopWatch Start()
         {
-            return new StopWatch(false);
+            var stopWatch = new StopWatch(true);
+            stopWatch.StartStopWatch();
+            return stopWatch;
         }
-
-        public float CurrentTime => time;
 
         /// <summary>
-        /// Stops the StopWatch
+        /// Reset StopWatch time.
         /// </summary>
-        public void Stop()
+        public void Reset() => CurrentTime = 0;
+
+        /// <summary>
+        /// Resumes the StopWatch.
+        /// </summary>
+        public void Resume()
         {
-            stop = true;
+            IsRunning = true;
+            StartStopWatch();
         }
 
-        private async void Start()
+        /// <summary>
+        /// Pauses the StopWatch.
+        /// </summary>
+        public void Pause() => IsRunning = false;
+
+        private async void StartStopWatch()
         {
-            while (!stop)
+            while (IsRunning)
             {
-                time += Time.deltaTime;
+                CurrentTime += Time.deltaTime;
                 await Task.Yield();
             }
         }
