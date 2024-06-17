@@ -4,6 +4,7 @@ using System;
 using UnityEngine.EventSystems;
 using UnityEngine;
 using System.Threading.Tasks;
+using static UnityEngine.LowLevel.PlayerLoopSystem;
 
 namespace UnityHelper.Utilities
 {
@@ -62,7 +63,7 @@ namespace UnityHelper.Utilities
         /// </summary>
         /// <param name="Function"> The Method to be updated.</param>
         /// <param name="condition"> The Condition to keep updating. </param>
-        public static void Update(Delegate Function, Func<bool> condition, params object[] args)
+        public static void Update(Action Function, Func<bool> condition, params object[] args)
         {
             UpdateProcess();
             async void UpdateProcess()
@@ -70,13 +71,24 @@ namespace UnityHelper.Utilities
                 while (condition())
                 {
                     //float time = 1 / Time.deltaTime;
-                    Function?.DynamicInvoke(args);
+                    Function?.Invoke();
                     //await Task.Delay((int)time);
                     await Task.Yield();
                 }
             }
 
         }
+
+        public static async Task CreateUpdate(Action function, Func<bool> stopCondition)
+        {
+            while (!stopCondition())
+            {
+                //Debug.Log("Running...");
+                function?.Invoke();
+                await Task.Yield();
+            }
+        }
+
         /// <summary>
         /// Updates <paramref name="Function"/> Repeatidly Each Frame at a fixed time While <paramref name="condition"/> is true. 
         /// </summary>
@@ -104,9 +116,9 @@ namespace UnityHelper.Utilities
         /// <param name="time">time in Seconds.</param>
         public static void Invoke(Action Function, float time)
         {
-            float startTime = Time.unscaledTime;
+            float startTime = Time.time;
             bool done = false;
-            Update(new Action(() => { if (Time.unscaledTime >= startTime + time) { Function?.Invoke(); done = true; } }), () => !done);
+            FunctionUpdater.Update("Invoke", () => { if (Time.time > startTime + time) { Function?.Invoke(); done = true; } }, () => done);
         }
         /// <summary>
         /// Deletes all the children of <paramref name="transform"/>.

@@ -21,7 +21,7 @@ namespace UnityHelper
                 Stop(actionName);
             }
 
-            CreateUpdate(actionName, function, stopCondition);
+            _ = CreateUpdate(actionName, function, stopCondition);
         }
 
         public static void Stop(string actionName)
@@ -40,7 +40,7 @@ namespace UnityHelper
             }
         }
 
-        private static async void CreateUpdate(string actionName, Action function, Func<bool> stopCondition)
+        private static async Task CreateUpdate(string actionName, Action function, Func<bool> stopCondition)
         {
             FunctionActiveState activeState = new FunctionActiveState { Value = true };
 
@@ -50,7 +50,7 @@ namespace UnityHelper
             while (!stopCondition() && activeState.Value)
             {
                 Debug.Log("Running...");
-                function?.Invoke();
+                function.Invoke();
                 await Task.Yield();
             }
 
