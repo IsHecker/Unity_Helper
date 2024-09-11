@@ -50,5 +50,9 @@ namespace UnityHelper.Extensions
             return new string(charArray);
         }
 
+        public static void Split(this string str, char separator, Action<int, int> spanAction)
+        {
+
+        }
     }
 }

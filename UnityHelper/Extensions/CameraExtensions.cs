@@ -88,6 +88,11 @@ namespace UnityHelper.Extensions
             camera.transform.position = targetPosition;
         }
 
+        public static void FollowObject(this Camera camera, Vector3 target, Vector3 offset)
+        {
+            camera.transform.position = target + offset;
+        }
+
         // Add other unique Camera extension methods here...
     }
 }

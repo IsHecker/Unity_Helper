@@ -15,7 +15,14 @@ namespace UnityHelper.Extensions
             return vector - Vector3.Project(vector, planeNormal);
         }
 
-        // Add other unique Vector extension methods here...
-    }
+        public static Vector2Int ToVector2Int(this Vector2 vector)
+        {
+            return new Vector2Int((int)vector.x, (int)vector.y);
+        }
 
+        public static Vector3Int ToVector3Int(this Vector3 vector)
+        {
+            return new Vector3Int((int)vector.x, (int)vector.y, (int)vector.z);
+        }
+    }
 }

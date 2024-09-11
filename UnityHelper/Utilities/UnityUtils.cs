@@ -19,32 +19,12 @@ namespace UnityHelper.Utilities
 
         // Functions
         public static Camera Camera { get { if (!_camera) { _camera = Camera.main; } return _camera; } }
-        public static bool IsOverUI(Touch touch)
-        {
-            if (touch.phase != TouchPhase.Began)
-                return false;
-
-            return !EventSystem.current.IsPointerOverGameObject(touch.fingerId);
-        }
-        public static GameObject GetPressedUI() => EventSystem.current.currentSelectedGameObject;
         public static Vector3 CanvasPositionToWorldPosition(RectTransform canvas)
         {
             RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas, canvas.position, Camera, out var result);
             return result;
         }
-        public static void TransitionUI(GameObject currentUI, GameObject targetUI, Animator animator, string boolName, bool state, float duration)
-        {
-            targetUI.SetActive(true);
-            animator.SetBool(boolName, state);
 
-            if (currentUI.name != "SelectMode_UI")
-                Invoke(() => currentUI.SetActive(false), duration);
-        }
-        public static void TransitionToUI(this GameObject currentUI, GameObject targetUI, Animator animator, string boolName, bool state, float duration)
-        {
-            //Just Extension function of TransitionUI()
-            TransitionUI(currentUI, targetUI, animator, boolName, state, duration);
-        }
         /// <summary>
         /// Searches the Collection <paramref name="self"/> for an Element and returns it if <paramref name="predicate"/> is True.
         /// </summary>
@@ -56,6 +36,11 @@ namespace UnityHelper.Utilities
                 if (predicate(item)) return item;
 
             return default;
+        }
+
+        public static Vector3 GetMousePosition()
+        {
+            return Camera.ScreenToWorldPoint(Input.mousePosition);
         }
 
         /// <summary>
