@@ -36,5 +36,14 @@ namespace Assets.UnityHelpers.Extensions
         {
             return Mathf.Pow(1 - t, 2) * p0 + 2 * (1 - t) * t * p1 + Mathf.Pow(t, 2) * p2;
         }
+
+
+        /// <summary>
+        /// Deletes all the children of <paramref name="transform"/>.
+        /// </summary>
+        public static void DeleteChildren(this Transform transform)
+        {
+            foreach (Transform child in transform) UnityEngine.Object.Destroy(child.gameObject);
+        }
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -7,54 +9,58 @@ namespace UnityHelper
 {
     public class FunctionUpdater
     {
-        private static readonly Dictionary<string, FunctionActiveState> updateFunctions = new();
+        private static readonly Dictionary<Action, UpdateCancellationToken> functionDictionary = new();
 
         /// <summary>
         /// Updates <paramref name="function"/> Repeatidly Every Frame While <paramref name="stopCondition"/> is true. 
         /// </summary>
-        /// <param name="function"> The Method to be updated.</param>
+        /// <param name="function"> The Method to be updated (don't use Lamda Exp).</param>
         /// <param name="stopCondition"> The Condition to keep updating. </param>
-        public static void Update(string actionName, Action function, Func<bool> stopCondition)
+        public static void Update(Action function, Func<bool> stopCondition, bool reset = false)
         {
-            if (!updateFunctions.TryAdd(actionName, null)) 
+            if (!functionDictionary.TryGetValue(function, out UpdateCancellationToken cancellationToken))
             {
-                Stop(actionName);
+                CreateUpdate(function, stopCondition);
+                return;
             }
 
-            _ = CreateUpdate(actionName, function, stopCondition);
+            if (!reset)
+                return;
+
+            Stop(function);
+            _ = StartUpdate(function, stopCondition, cancellationToken);
         }
 
-        public static void Stop(string actionName)
+        public static void Stop(Action function)
         {
-            if (!updateFunctions.TryGetValue(actionName, out var func))
-                return;
-            func.Value = false;
+            functionDictionary[function].Cancel();
         }
 
         public static void StopAll()
         {
-            foreach (var (key, state) in updateFunctions)
+            foreach (var token in functionDictionary.Values)
             {
-                state.Value = false;
-                updateFunctions.Remove(key);
+                token.Cancel();
             }
         }
 
-        private static async Task CreateUpdate(string actionName, Action function, Func<bool> stopCondition)
+        private static void CreateUpdate(Action function, Func<bool> stopCondition)
         {
-            FunctionActiveState activeState = new FunctionActiveState { Value = true };
+            var cancellationToken = new UpdateCancellationToken();
+            functionDictionary[function] = cancellationToken;
 
-            updateFunctions[actionName] = activeState;
+            _ = StartUpdate(function, stopCondition, cancellationToken);
+        }
 
+        private static async Task StartUpdate(Action function, Func<bool> stopCondition, UpdateCancellationToken cancellationToken)
+        {
+            cancellationToken.Reset();
 
-            while (!stopCondition() && activeState.Value)
+            while (!stopCondition() && !cancellationToken.IsCanceled)
             {
-                Debug.Log("Running...");
                 function.Invoke();
                 await Task.Yield();
             }
-
-            updateFunctions.Remove(actionName);
         }
 
 
@@ -69,9 +75,13 @@ namespace UnityHelper
             public bool GetPtr() => *ptr;
         }
 
-        private class FunctionActiveState
+        private class UpdateCancellationToken
         {
-            public bool Value { get; set; }
+            public volatile bool IsCanceled = false;
+
+            public void Cancel() => IsCanceled = true;
+
+            public void Reset() => IsCanceled = false;
         }
     }
 }

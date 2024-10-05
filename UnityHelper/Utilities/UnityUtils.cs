@@ -19,11 +19,6 @@ namespace UnityHelper.Utilities
 
         // Functions
         public static Camera Camera { get { if (!_camera) { _camera = Camera.main; } return _camera; } }
-        public static Vector3 CanvasPositionToWorldPosition(RectTransform canvas)
-        {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(canvas, canvas.position, Camera, out var result);
-            return result;
-        }
 
         /// <summary>
         /// Searches the Collection <paramref name="self"/> for an Element and returns it if <paramref name="predicate"/> is True.
@@ -50,15 +45,15 @@ namespace UnityHelper.Utilities
         /// <param name="condition"> The Condition to keep updating. </param>
         public static void Update(Action Function, Func<bool> condition, params object[] args)
         {
-            UpdateProcess();
-            async void UpdateProcess()
+            _ = UpdateProcess();
+            async Task UpdateProcess()
             {
                 while (condition())
                 {
                     //float time = 1 / Time.deltaTime;
                     Function?.Invoke();
-                    //await Task.Delay((int)time);
-                    await Task.Yield();
+                    await Task.Delay((int)(Time.deltaTime * 1000));
+                    //await Task.Yield();
                 }
             }
 
@@ -103,14 +98,7 @@ namespace UnityHelper.Utilities
         {
             float startTime = Time.time;
             bool done = false;
-            FunctionUpdater.Update("Invoke", () => { if (Time.time > startTime + time) { Function?.Invoke(); done = true; } }, () => done);
-        }
-        /// <summary>
-        /// Deletes all the children of <paramref name="transform"/>.
-        /// </summary>
-        public static void DeleteChildren(this Transform transform)
-        {
-            foreach (Transform child in transform) UnityEngine.Object.Destroy(child.gameObject);
+            FunctionUpdater.Update(() => { if (Time.time - startTime > time) { Function.Invoke(); done = true; } }, () => done);
         }
         public static int GenerateRandomNumber(int minRange, int maxRange)
         {

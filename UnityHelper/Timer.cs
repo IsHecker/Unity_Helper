@@ -10,21 +10,17 @@ namespace UnityHelper
         /// <summary>
         /// The initial time set for the countdown.
         /// </summary>
-        private readonly float timerValue;
+        private float timerValue;
 
-        /// <summary>
-        /// Gets or sets the current time of the countdown.
-        /// </summary>
-        private float CurrentTime { get; set; }
+        private float startTime;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CountdownTimer"/> class with a specified initial time and an option to auto tick.
         /// </summary>
         /// <param name="timerValue">The initial time value for the countdown.</param>
-        public Timer(float timerValue)
+        public Timer(float timerValue = 0f)
         {
-            this.timerValue = timerValue;
-            CurrentTime = float.MaxValue;
+            SetTimer(timerValue);
         }
 
         /// <summary>
@@ -32,7 +28,7 @@ namespace UnityHelper
         /// </summary>
         public void Start()
         {
-            CurrentTime = Time.time;
+            startTime = Time.time;
         }
 
         /// <summary>
@@ -41,15 +37,27 @@ namespace UnityHelper
         /// <returns>False if the Timer didn't start yet or the Timer has actually Finished.</returns>
         public bool IsFinsished()
         {
-            return Time.time - CurrentTime > timerValue;
+            return Time.time - startTime > timerValue;
         }
 
         /// <summary>
-        /// Reset the Timer.
+        /// Stops the Timer.
         /// </summary>
         public void Stop()
         {
-            CurrentTime = float.MaxValue;
+            startTime = float.MaxValue;
+        }
+
+        /// <summary>
+        /// Sets the Timer to new value.
+        /// </summary>
+        public void SetTimer(float timerValue)
+        {
+            if (timerValue <= 0f)
+                return;
+
+            Stop();
+            this.timerValue = timerValue;
         }
     }
 }
